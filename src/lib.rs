@@ -1,7 +1,12 @@
 //! `better-panic` gives you pretty backtraces for panics.
 //! 
-//! It's originally based on the [color-backtrace](https://crates.io/crates/color-backtrace)
-//! library but it crates backtraces that look more like Python tracebacks.
+//! It is inspired by Python tracebacks and tries to replicate them as well
+//! as possible.  This is what it looks like:
+//! 
+//! <img src="https://github.com/mitsuhiko/better-panic/raw/master/screenshot.png">
+//! 
+//! Some of the code is based on the
+//! [color-backtrace](https://crates.io/crates/color-backtrace) library.
 //! 
 //! ## Usage
 //! 

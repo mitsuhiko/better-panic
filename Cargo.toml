@@ -19,6 +19,3 @@ keywords = [
 backtrace = { version = "0.3.30", default-features = false, features = ["std", "libbacktrace", "libbacktrace", "libunwind", "dladdr"] }
 console = "0.7.7"
 syntect = { version = "3.2.0", optional = true }
-
-[dev-dependencies]
-rand = "0.6.5"
