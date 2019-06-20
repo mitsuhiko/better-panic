@@ -17,7 +17,7 @@ which installs a panic handler.  In debug builds the backtrace is shown
 automatically, in release builds it's hidden by default.
 
 ```rust
-pretty_backtrace::install();
+better_panic::install();
 ```
 
 For more configuration see the `Settings` object.

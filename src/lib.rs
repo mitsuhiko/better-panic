@@ -15,7 +15,7 @@
 //! automatically, in release builds it's hidden by default.
 //! 
 //! ```
-//! pretty_backtrace::install();
+//! better_panic::install();
 //! ```
 //! 
 //! For more configuration see the `Settings` object.
@@ -91,7 +91,7 @@ impl Frame {
             "core::",
             "backtrace::backtrace::",
             "_rust_begin_unwind",
-            "pretty_backtrace::",
+            "better_panic::",
             "__rust_",
             "___rust_",
             "__pthread",
