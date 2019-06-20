@@ -1,0 +1,24 @@
+[package]
+name = "better-panic"
+version = "0.1.0"
+authors = ["Armin Ronacher <armin.ronacher@active-4.com>", "Joel Höner <athre0z@zyantific.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/mitsuhiko/better-panic"
+description = "Pretty panic backtraces"
+readme = "README.md"
+keywords = [
+    "panic",
+    "backtrace",
+    "stacktrace",
+    "color",
+    "pretty",
+]
+
+[dependencies]
+backtrace = { version = "0.3.30", default-features = false, features = ["std", "libbacktrace", "libbacktrace", "libunwind", "dladdr"] }
+console = "0.7.7"
+syntect = { version = "3.2.0", optional = true }
+
+[dev-dependencies]
+rand = "0.6.5"
