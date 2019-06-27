@@ -1,27 +1,27 @@
 //! `better-panic` gives you pretty backtraces for panics.
-//! 
+//!
 //! It is inspired by Python tracebacks and tries to replicate them as well
 //! as possible.  This is what it looks like:
-//! 
+//!
 //! <img src="https://github.com/mitsuhiko/better-panic/raw/master/screenshot.png">
-//! 
+//!
 //! Some of the code is based on the
 //! [color-backtrace](https://crates.io/crates/color-backtrace) library.
-//! 
+//!
 //! ## Usage
-//! 
+//!
 //! The most common way to use it is to invoke the `install` function
 //! which installs a panic handler.  In debug builds the backtrace is shown
 //! automatically, in release builds it's hidden by default.
-//! 
+//!
 //! ```
 //! better_panic::install();
 //! ```
-//! 
+//!
 //! For more configuration see the `Settings` object.
-//! 
+//!
 //! ## Features
-//! 
+//!
 //! - Colorize backtraces to be easier on the eyes
 //! - Show source snippets if source files are found on disk
 //! - Hide all the frames after the panic was already initiated
@@ -230,17 +230,31 @@ impl Frame {
             None => Cow::Borrowed("<unknown>"),
         };
 
-        writeln!(
-            &s.out,
-            "  File \"{}\", line {}, in {}",
-            style(file).underlined(),
-            style(self.lineno.unwrap_or(0)).yellow(),
-            if has_hash_suffix {
-                name_style.apply_to(&name[..name.len() - 19])
-            } else {
-                name_style.apply_to(name)
-            },
-        )?;
+        if s.lineno_suffix {
+            writeln!(
+                &s.out,
+                "  File \"{}:{}\", in {}",
+                style(file).underlined(),
+                style(self.lineno.unwrap_or(0)).yellow(),
+                if has_hash_suffix {
+                    name_style.apply_to(&name[..name.len() - 19])
+                } else {
+                    name_style.apply_to(name)
+                },
+            )?;
+        } else {
+            writeln!(
+                &s.out,
+                "  File \"{}\", line {}, in {}",
+                style(file).underlined(),
+                style(self.lineno.unwrap_or(0)).yellow(),
+                if has_hash_suffix {
+                    name_style.apply_to(&name[..name.len() - 19])
+                } else {
+                    name_style.apply_to(name)
+                },
+            )?;
+        }
 
         // Maybe print source.
         if s.verbosity >= Verbosity::Full {
@@ -259,6 +273,7 @@ pub struct Settings {
     verbosity: Verbosity,
     backtrace_first: bool,
     most_recent_first: bool,
+    lineno_suffix: bool,
 }
 
 impl Default for Settings {
@@ -269,6 +284,7 @@ impl Default for Settings {
             out: console::Term::stderr(),
             backtrace_first: true,
             most_recent_first: true,
+            lineno_suffix: false,
         }
     }
 }
@@ -286,10 +302,12 @@ impl Settings {
 
     /// In release builds this is `new`, in debug builds this is `debug`.
     pub fn auto() -> Self {
-        #[cfg(debug_assertions)] {
+        #[cfg(debug_assertions)]
+        {
             Self::debug()
         }
-        #[cfg(not(debug_assertions))] {
+        #[cfg(not(debug_assertions))]
+        {
             Self::new()
         }
     }
@@ -325,6 +343,17 @@ impl Settings {
     /// the panic.
     pub fn most_recent_first(mut self, value: bool) -> Self {
         self.most_recent_first = value;
+        self
+    }
+
+    /// Append the line number as suffix to the filename.
+    ///
+    /// Defaults to `false` which causes line numbers to be rendered separately.
+    /// Specifically this renders `File "foo.rs:42"` instead of
+    /// `File "foo.rs", line 42` which lets some terminals open the editor
+    /// at the right location on click.
+    pub fn lineno_suffix(mut self, value: bool) -> Self {
+        self.lineno_suffix = value;
         self
     }
 
@@ -482,12 +511,21 @@ fn print_panic_info(pi: &PanicInfo, s: &Settings) -> Result<(), io::Error> {
     // If known, print panic location.
     write!(&s.out, "in ")?;
     if let Some(loc) = pi.location() {
-        writeln!(
-            &s.out,
-            "{}, line {}",
-            style(trim_filename(Path::new(loc.file()))).underlined(),
-            style(loc.line()).yellow()
-        )?;
+        if s.lineno_suffix {
+            writeln!(
+                &s.out,
+                "{}:{}",
+                style(trim_filename(Path::new(loc.file()))).underlined(),
+                style(loc.line()).yellow()
+            )?;
+        } else {
+            writeln!(
+                &s.out,
+                "{}, line {}",
+                style(trim_filename(Path::new(loc.file()))).underlined(),
+                style(loc.line()).yellow()
+            )?;
+        }
     } else {
         writeln!(&s.out, "<unknown>")?;
     }
