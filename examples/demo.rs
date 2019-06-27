@@ -9,6 +9,7 @@ fn foo() {
 fn main() {
     better_panic::Settings::debug()
         .most_recent_first(false)
+        .lineno_suffix(true)
         .install();
     foo();
 }
