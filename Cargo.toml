@@ -16,6 +16,6 @@ keywords = [
 ]
 
 [dependencies]
-backtrace = { version = "0.3.30", default-features = false, features = ["std", "libbacktrace", "libbacktrace", "libunwind", "dladdr"] }
+backtrace = { version = "0.3.30", default-features = false, features = ["std", "libbacktrace", "libbacktrace", "libunwind", "dladdr", "dbghelp"] }
 console = "0.7.7"
 syntect = { version = "3.2.0", optional = true }

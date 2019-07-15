@@ -1,3 +1,5 @@
+[![Crates.io](https://img.shields.io/crates/v/better-panic.svg)](https://crates.io/crates/better-panic)
+
 # better-panic
 
 `better-panic` gives you pretty backtraces for panics.
