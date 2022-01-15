@@ -39,4 +39,4 @@ For more configuration see the `Settings` object.
 - [Documentation](https://docs.rs/better-panic/)
 - [Issue Tracker](https://github.com/mitsuhiko/better-panic/issues)
 - [Examples](https://github.com/mitsuhiko/better-panic/tree/master/examples)
-- License: [Apache-2.0](https://github.com/mitsuhiko/better-panic/blob/master/LICENSE)
+- License: [MIT](https://github.com/mitsuhiko/better-panic/blob/master/LICENSE)
