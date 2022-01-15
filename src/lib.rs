@@ -84,6 +84,18 @@ struct Frame {
 }
 
 impl Frame {
+    fn name_without_hash(&self) -> Option<&str> {
+        let name = self.name.as_ref()?;
+        let has_hash_suffix = name.len() > 19
+            && &name[name.len() - 19..name.len() - 16] == "::h"
+            && name[name.len() - 16..].chars().all(|x| x.is_digit(16));
+        if has_hash_suffix {
+            Some(&name[..name.len() - 19])
+        } else {
+            Some(name)
+        }
+    }
+
     fn is_dependency_code(&self) -> bool {
         const SYM_PREFIXES: &[&str] = &[
             "std::",
@@ -111,6 +123,7 @@ impl Frame {
         }
 
         const FILE_PREFIXES: &[&str] = &[
+            "rust:",
             "/rustc/",
             "src/libstd/",
             "src/libpanic_unwind/",
@@ -146,6 +159,7 @@ impl Frame {
             "panic_bounds_check",
             "core::result::unwrap_failed",
             "core::panicking::panic_fmt",
+            "core::panicking::panic_bounds_check",
             "color_backtrace::create_panic_handler",
             "std::panicking::begin_panic",
             "begin_panic_fmt",
@@ -160,8 +174,10 @@ impl Frame {
             }
         }
 
-        match self.name.as_ref() {
-            Some(name) => SYM_PREFIXES.iter().any(|x| name.starts_with(x)),
+        match self.name_without_hash() {
+            Some(name) => SYM_PREFIXES
+                .iter()
+                .any(|x| name.starts_with(x) || name.ends_with("__rust_end_short_backtrace")),
             None => false,
         }
     }
@@ -172,12 +188,15 @@ impl Frame {
         const SYM_PREFIXES: &[&str] =
             &["std::rt::lang_start::", "test::run_test::run_test_inner::"];
 
-        let (name, file) = match (self.name.as_ref(), self.filename.as_ref()) {
+        let (name, file) = match (self.name_without_hash(), self.filename.as_ref()) {
             (Some(name), Some(filename)) => (name, filename.to_string_lossy()),
             _ => return false,
         };
 
-        if SYM_PREFIXES.iter().any(|x| name.starts_with(x)) {
+        if SYM_PREFIXES
+            .iter()
+            .any(|x| name.starts_with(x) || name.ends_with("__rust_start_short_backtrace"))
+        {
             return true;
         }
 
@@ -187,6 +206,15 @@ impl Frame {
         }
 
         false
+    }
+
+    /// Is this a call once frame?
+    fn is_call_once(&self) -> bool {
+        if let Some(name) = self.name_without_hash() {
+            name.ends_with("FnOnce::call_once")
+        } else {
+            false
+        }
     }
 
     fn print_source(&self, s: &Settings) -> Result<(), io::Error> {
@@ -202,16 +230,9 @@ impl Frame {
     fn print(&self, s: &Settings) -> Result<(), io::Error> {
         let is_dependency_code = self.is_dependency_code();
 
-        let name = self.name.as_deref().unwrap_or("<unknown>");
-
-        // Does the function have a hash suffix?
-        // (dodging a dep on the regex crate here)
-        let has_hash_suffix = name.len() > 19
-            && &name[name.len() - 19..name.len() - 16] == "::h"
-            && name[name.len() - 16..].chars().all(|x| x.is_digit(16));
+        let name = self.name_without_hash().unwrap_or("<unknown>");
 
         // Print function name.
-
         let mut name_style = console::Style::new();
         if is_dependency_code {
             name_style = name_style.cyan();
@@ -231,11 +252,7 @@ impl Frame {
                 "  File \"{}:{}\", in {}",
                 style(file).underlined(),
                 style(self.lineno.unwrap_or(0)).yellow(),
-                if has_hash_suffix {
-                    name_style.apply_to(&name[..name.len() - 19])
-                } else {
-                    name_style.apply_to(name)
-                },
+                name_style.apply_to(name)
             )?;
         } else {
             writeln!(
@@ -243,11 +260,7 @@ impl Frame {
                 "  File \"{}\", line {}, in {}",
                 style(file).underlined(),
                 style(self.lineno.unwrap_or(0)).yellow(),
-                if has_hash_suffix {
-                    name_style.apply_to(&name[..name.len() - 19])
-                } else {
-                    name_style.apply_to(name)
-                },
+                name_style.apply_to(name)
             )?;
         }
 
@@ -435,10 +448,15 @@ fn print_backtrace(bt: Option<&backtrace::Backtrace>, s: &Settings) -> Result<()
     let bottom_cutoff = frames
         .iter()
         .position(Frame::is_runtime_init_code)
+        .map(|x| x - 1)
         .unwrap_or_else(|| frames.len());
 
     // Turn them into `Frame` objects and print them.
-    let frames = &frames[top_cutoff..bottom_cutoff];
+    let mut frames = &frames[top_cutoff..bottom_cutoff];
+
+    if !frames.is_empty() && frames[frames.len() - 1].is_call_once() {
+        frames = &frames[..frames.len() - 1];
+    }
 
     if s.most_recent_first {
         for frame in frames {
