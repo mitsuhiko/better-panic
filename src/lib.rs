@@ -25,7 +25,6 @@
 //! - Colorize backtraces to be easier on the eyes
 //! - Show source snippets if source files are found on disk
 //! - Hide all the frames after the panic was already initiated
-use backtrace;
 use console::style;
 use std::borrow::Cow;
 use std::fs::File;
@@ -119,7 +118,7 @@ impl Frame {
         ];
 
         // Inspect filename.
-        if let Some(ref filename) = self.filename.as_ref().and_then(|x| x.to_str()) {
+        if let Some(filename) = self.filename.as_ref().and_then(|x| x.to_str()) {
             // some filenames are really weird from macro expansion.  consider
             // them not to be part of the user code.
             if filename.contains('<') {
@@ -203,11 +202,7 @@ impl Frame {
     fn print(&self, s: &Settings) -> Result<(), io::Error> {
         let is_dependency_code = self.is_dependency_code();
 
-        let name = self
-            .name
-            .as_ref()
-            .map(String::as_str)
-            .unwrap_or("<unknown>");
+        let name = self.name.as_deref().unwrap_or("<unknown>");
 
         // Does the function have a hash suffix?
         // (dodging a dep on the regex crate here)
@@ -226,7 +221,7 @@ impl Frame {
 
         // Print source location, if known.
         let file = match &self.filename {
-            Some(filename) => trim_filename(&filename),
+            Some(filename) => trim_filename(filename),
             None => Cow::Borrowed("<unknown>"),
         };
 
