@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/mitsuhiko/better-panic/workflows/Tests/badge.svg?branch=master)](https://github.com/mitsuhiko/better-panic/actions?query=workflow%3ATests)
 [![Crates.io](https://img.shields.io/crates/d/better-panic.svg)](https://crates.io/crates/better-panic)
 [![License](https://img.shields.io/github/license/mitsuhiko/better-panic)](https://github.com/mitsuhiko/better-panic/blob/master/LICENSE)
-[![rustc 1.42.0](https://img.shields.io/badge/rust-1.46%2B-orange.svg)](https://img.shields.io/badge/rust-1.42%2B-orange.svg)
+[![rustc 1.42.0](https://img.shields.io/badge/rust-1.42%2B-orange.svg)](https://img.shields.io/badge/rust-1.42%2B-orange.svg)
 [![Documentation](https://docs.rs/better-panic/badge.svg)](https://docs.rs/better-panic)
 
 `better-panic` gives you pretty backtraces for panics.
